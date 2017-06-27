@@ -2,4 +2,8 @@
 
 require 'pdk/cli'
 
+# require 'pdk/util/windows'
+
+# PDK::Util::Windows.set_vt_processing
+
 PDK::CLI.run(ARGV)
