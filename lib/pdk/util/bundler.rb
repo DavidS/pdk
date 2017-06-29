@@ -28,6 +28,8 @@ module PDK
         end
 
         unless bundle.installed?
+          bundle_command('config', 'disable_shared_gems', 'false').execute!
+
           unless bundle.install!
             raise PDK::CLI::FatalError, _('Unable to install missing Gemfile dependencies.')
           end
