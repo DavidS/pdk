@@ -12,7 +12,7 @@ module PDK
 
     # @return [Symbol] the method name of the default report format.
     def self.default_format
-      :to_text
+      :write_text
     end
 
     # @return [#write] the default target to write the report to.
@@ -47,7 +47,7 @@ module PDK
     #
     # @param target [#write] an IO object that the report will be written to.
     #   Defaults to PDK::Report.default_target.
-    def to_junit(target = self.class.default_target)
+    def write_junit(target = self.class.default_target)
       document = REXML::Document.new
       document << REXML::XMLDecl.new
       testsuites = REXML::Element.new('testsuites')
@@ -59,6 +59,7 @@ module PDK
         testsuite.attributes['tests'] = testcases.length
         testsuite.attributes['errors'] = testcases.select(&:error?).length
         testsuite.attributes['failures'] = testcases.select(&:failure?).length
+        testsuite.attributes['skipped'] = testcases.select(&:skipped?).length
         testsuite.attributes['time'] = 0
         testsuite.attributes['timestamp'] = Time.now.strftime('%Y-%m-%dT%H:%M:%S')
         testsuite.attributes['hostname'] = Socket.gethostname
@@ -84,7 +85,10 @@ module PDK
     #
     # @param target [#write] an IO object that the report will be written to.
     #   Defaults to PDK::Report.default_target.
-    def to_text(target = self.class.default_target)
+    def write_text(target = self.class.default_target)
+      # Extra defaulting here, b/c the Class.send method will pass in nil
+      target ||= self.class.default_target
+
       events.each do |_tool, tool_events|
         tool_events.each do |event|
           target.puts(event.to_text) unless event.pass?

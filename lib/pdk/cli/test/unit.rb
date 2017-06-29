@@ -1,3 +1,6 @@
+require 'pdk/cli/util/option_validator'
+require 'pdk/report'
+
 module PDK::CLI
   @test_unit_cmd = @test_cmd.define_command do
     name 'unit'
@@ -6,11 +9,12 @@ module PDK::CLI
 
     flag nil, :list, _('list all available unit tests and their descriptions')
 
-    option nil, :tests, _('a comma-separated list of tests to run'), argument: :required do |values|
-      OptionValidator.list(values)
+    option nil, :tests, _('a comma-separated list of tests to run'), argument: :required, default: '' do |values|
+      PDK::CLI::Util::OptionValidator.comma_separated_list?(values)
     end
 
-    option nil, :runner_options, _('options to pass through to the actual test-runner'), argument: :required
+    # TODO
+    # option nil, :runner_options, _("options to pass through to the actual test-runner"), argument: :required
 
     run do |opts, _args, _cmd|
       require 'pdk/tests/unit'
@@ -20,20 +24,34 @@ module PDK::CLI
       report = nil
 
       if opts[:list]
-        puts _('List of all available unit tests: (TODO)')
-      end
+        examples = PDK::Test::Unit.list
+        if examples.empty?
+          puts _('No examples found.')
+        else
+          puts _('Examples:')
+          examples.each do |example|
+            puts _("%{id}\t%{description}" % { id: example[:id], description: example[:full_description] })
+          end
+        end
+      else
+        report = PDK::Report.new
+        report_formats = if opts[:format]
+                           PDK::CLI::Util::OptionNormalizer.report_formats(opts[:format])
+                         else
+                           [{
+                             method: PDK::Report.default_format,
+                             target: PDK::Report.default_target,
+                           }]
+                         end
 
-      if opts[:tests]
-        tests = opts.fetch(:tests)
-      end
+        exit_code = PDK::Test::Unit.invoke(report, opts)
 
-      # Note: Reporting may be delegated to the validation tool itself.
-      if opts[:'report-file']
-        format = opts.fetch(:'report-format', PDK::Report.default_format)
-        report = Report.new(opts.fetch(:'report-file'), format)
-      end
+        report_formats.each do |format|
+          report.send(format[:method], format[:target])
+        end
 
-      PDK::Test::Unit.invoke(tests, report)
+        exit exit_code
+      end
     end
   end
 end

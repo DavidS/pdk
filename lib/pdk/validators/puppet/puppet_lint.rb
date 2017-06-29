@@ -22,13 +22,21 @@ module PDK
         _('Checking Puppet manifest style')
       end
 
-      def self.parse_options(_options, targets)
+      def self.parse_options(options, targets)
         cmd_options = ['--json']
+
+        cmd_options << '--fix' if options[:auto_correct]
 
         cmd_options.concat(targets)
       end
 
-      def self.parse_output(report, json_data, targets)
+      def self.parse_output(report, result, targets)
+        begin
+          json_data = JSON.parse(result[:stdout])
+        rescue JSON::ParserError
+          json_data = []
+        end
+
         # puppet-lint does not include files without problems in its JSON
         # output, so we need to go through the list of targets and add passing
         # events to the report for any target not listed in the JSON output.
@@ -49,7 +57,7 @@ module PDK
             column:   offense['column'],
             message:  offense['message'],
             test:     offense['check'],
-            severity: offense['kind'],
+            severity: (offense['kind'] == 'fixed') ? 'corrected' : offense['kind'],
             state:    :failure,
           )
         end

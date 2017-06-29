@@ -20,13 +20,23 @@ module PDK
         _('Checking Ruby code style')
       end
 
-      def self.parse_options(_options, targets)
+      def self.parse_options(options, targets)
         cmd_options = ['--format', 'json']
+
+        if options[:auto_correct]
+          cmd_options << '--auto-correct'
+        end
 
         cmd_options.concat(targets)
       end
 
-      def self.parse_output(report, json_data, _targets)
+      def self.parse_output(report, result, _targets)
+        begin
+          json_data = JSON.parse(result[:stdout])
+        rescue JSON::ParserError
+          json_data = []
+        end
+
         return unless json_data.key?('files')
 
         json_data['files'].each do |file_info|
@@ -45,7 +55,7 @@ module PDK
                   line:     offense['location']['line'],
                   column:   offense['location']['column'],
                   message:  offense['message'],
-                  severity: offense['severity'],
+                  severity: (offense['corrected']) ? 'corrected' : offense['severity'],
                   test:     offense['cop_name'],
                   state:    :failure,
                 ),

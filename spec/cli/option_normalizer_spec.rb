@@ -17,7 +17,7 @@ describe PDK::CLI::Util::OptionNormalizer do
       it 'returns a single format specification with no target' do
         reports = described_class.report_formats(['text'])
         expect(reports.length).to eq(1)
-        expect(reports[0][:method]).to eq(:to_text)
+        expect(reports[0][:method]).to eq(:write_text)
         expect(reports[0][:target]).to eq(nil)
       end
     end
@@ -26,7 +26,7 @@ describe PDK::CLI::Util::OptionNormalizer do
       it 'returns a single format specification with target' do
         reports = described_class.report_formats(['text:foo.txt'])
         expect(reports.length).to eq(1)
-        expect(reports[0][:method]).to eq(:to_text)
+        expect(reports[0][:method]).to eq(:write_text)
         expect(reports[0][:target]).to eq('foo.txt')
       end
 
@@ -34,7 +34,7 @@ describe PDK::CLI::Util::OptionNormalizer do
         it 'returns the $stdout IO object as the target' do
           reports = described_class.report_formats(['text:stdout'])
           expect(reports.length).to eq(1)
-          expect(reports[0][:method]).to eq(:to_text)
+          expect(reports[0][:method]).to eq(:write_text)
           expect(reports[0][:target]).to eq($stdout)
         end
       end
@@ -43,7 +43,7 @@ describe PDK::CLI::Util::OptionNormalizer do
         it 'returns the $stderr IO object as the target' do
           reports = described_class.report_formats(['text:stderr'])
           expect(reports.length).to eq(1)
-          expect(reports[0][:method]).to eq(:to_text)
+          expect(reports[0][:method]).to eq(:write_text)
           expect(reports[0][:target]).to eq($stderr)
         end
       end
@@ -53,16 +53,16 @@ describe PDK::CLI::Util::OptionNormalizer do
       it 'returns multiple format specifications with targets when appropriate' do
         reports = described_class.report_formats(['text', 'junit:foo.junit'])
         expect(reports.length).to eq(2)
-        expect(reports[0][:method]).to eq(:to_text)
+        expect(reports[0][:method]).to eq(:write_text)
         expect(reports[0][:target]).to eq(nil)
-        expect(reports[1][:method]).to eq(:to_junit)
+        expect(reports[1][:method]).to eq(:write_junit)
         expect(reports[1][:target]).to eq('foo.junit')
       end
     end
   end
 
   context 'when normalising parameter specifications' do
-    subject { described_class.parameter_specification(param_spec) }
+    subject(:normalised_parameter) { described_class.parameter_specification(param_spec) }
 
     let(:param_name) { 'test_param' }
     let(:param_type) { nil }
@@ -105,7 +105,7 @@ describe PDK::CLI::Util::OptionNormalizer do
         allow(PDK::CLI::Util::OptionValidator).to receive(:valid_param_name?).with(param_name).and_return(false)
       end
 
-      it { expect { subject }.to raise_error(PDK::CLI::FatalError, %r{'#{param_name}' is not a valid parameter name}) }
+      it { expect { normalised_parameter }.to raise_error(PDK::CLI::FatalError, %r{'#{param_name}' is not a valid parameter name}) }
     end
 
     context 'when passed an invalid data type' do
@@ -115,7 +115,7 @@ describe PDK::CLI::Util::OptionNormalizer do
         allow(PDK::CLI::Util::OptionValidator).to receive(:valid_data_type?).with(param_type).and_return(false)
       end
 
-      it { expect { subject }.to raise_error(PDK::CLI::FatalError, %r{'#{param_type}' is not a valid data type}) }
+      it { expect { normalised_parameter }.to raise_error(PDK::CLI::FatalError, %r{'#{param_type}' is not a valid data type}) }
     end
   end
 end

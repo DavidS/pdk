@@ -45,9 +45,7 @@ module PDK
 
         PDK::Util::Bundler.ensure_binstubs!(cmd)
         cmd_argv = parse_options(options, targets).unshift(cmd_path)
-        cmd_argv.unshift('ruby') if Gem.win_platform?
-
-        PDK.logger.debug(_('Running %{cmd}') % { cmd: cmd_argv.join(' ') })
+        cmd_argv.unshift('ruby', '-W0') if Gem.win_platform?
 
         command = PDK::CLI::Exec::Command.new(*cmd_argv).tap do |c|
           c.context = :module
@@ -56,13 +54,7 @@ module PDK
 
         result = command.execute!
 
-        begin
-          json_data = JSON.parse(result[:stdout])
-        rescue JSON::ParserError
-          json_data = []
-        end
-
-        parse_output(report, json_data, targets)
+        parse_output(report, result, targets)
 
         result[:exit_code]
       end

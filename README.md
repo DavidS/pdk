@@ -52,10 +52,46 @@ pdk validate
 This displays results in the console:
 
 ```
-Running validations on `new_module`:
-* ruby syntax: OK!
-* puppet syntax: OK!
+pdk (INFO): Running all available validators...
+[✔] Checking for missing Gemfile dependencies
+[✔] Checking metadata.json
+[✔] Checking Ruby code style
 [...]
+```
+
+Specific validators can be run by providing the validator name (or a comma
+separated list of names) as an argument to `pdk validate`.
+
+```
+$ pdk validate metadata
+[✔] Checking for missing Gemfile dependencies
+[✔] Checking metadata.json
+```
+
+By default each validator will automatically determine which files in the
+module that it should validate, however validations can be run on specific
+files or directories by providing them as arguments to `pdk validate`
+
+```
+$ pdk validate lib/
+[✔] Checking for missing Gemfile dependencies
+[✔] Checking Ruby code style
+```
+
+Some validators support automatic correction of detected problems (for example,
+both rubocop and puppet-lint can automatically correct many common code style
+problems). To enable this functionality, run `pdk validate` with the
+`--auto-correct` option.
+
+```
+$ pdk validate --auto-correct
+pdk (INFO): Running all available validators...
+[✔] Checking for missing Gemfile dependencies
+[✔] Checking metadata.json
+[✔] Checking Puppet manifest style
+[✔] Checking Puppet manifest syntax
+[✔] Checking Ruby code style
+manifests/init.pp:1:10: corrected: double quoted string containing no variables
 ```
 
 ### Run unit tests
@@ -262,3 +298,12 @@ bundle binstubs pdk --path ~/bin
 ```
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/puppetlabs/pdk.
+
+### Release Process
+
+1. Bump the version in `lib/pdk/version.rb`.
+1. In a clean checkout of master, run `rake changelog`.
+1. Edit PR titles and tags, until `rake changelog` output makes sense.
+1. Commit and PR the changes.
+1. When the PR is merged, get a clean checkout of the merged commit, and run `rake release[upstream]` (where "upstream" is your local name of the puppetlabs remote)
+1. Profit!
