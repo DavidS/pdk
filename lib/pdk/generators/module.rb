@@ -15,7 +15,7 @@ require 'pdk/util/version'
 module PDK
   module Generate
     class Module
-      DEFAULT_TEMPLATE = 'https://github.com/puppetlabs/pdk-module-template'.freeze
+      DEFAULT_TEMPLATE = 'https://github.com/DavidS/pdk-module-template'.freeze
 
       def self.invoke(opts = {})
         target_dir = File.expand_path(opts[:target_dir])
