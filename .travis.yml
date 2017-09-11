@@ -2,8 +2,10 @@ sudo: false
 language: ruby
 bundler_args: "--without development"
 script:
+  - echo travis_fold:start:environment_info
   - cat Gemfile.lock
   - bundle list
+  - echo travis_fold:end:environment_info
   - bundle exec rake $CHECK
 cache: bundler
 matrix:
